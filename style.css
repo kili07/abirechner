@@ -1,0 +1,329 @@
+/* ═══════════════════════════════════════════════════════════════
+   Abi-Rechner — Stylesheet
+
+   Aufbau:
+   1. Design-Tokens (Maße, Typo, Bewegung) — themenunabhängig
+   2. Themes, die nur Tokens überschreiben
+   3. Komponenten, die ausschließlich Tokens benutzen
+
+   Regel für Änderungen: in den Komponenten stehen keine festen Farben.
+   Wer eine neue Farbe braucht, legt ein Token an und bedient alle Themes.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── 1. Tokens ──────────────────────────────────────────────── */
+:root{
+  --pad:16px;
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:24px;
+
+  --r-xs:6px; --r-sm:10px; --r:14px; --r-lg:18px; --r-xl:22px; --r-pill:999px;
+
+  /* Nur Systemschriften: es wird nichts nachgeladen, die App bleibt offline-fähig */
+  --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",system-ui,sans-serif;
+  --font-display:var(--font-ui);
+  --font-num:var(--font-ui);
+
+  --tab-h:66px;
+  --tab-bottom:0px;
+  --tab-safe:env(safe-area-inset-bottom, 0px);
+  --tab-side:0px;
+  --tab-radius:0px;
+
+  --ease:cubic-bezier(.2,.8,.2,1);
+  --fast:.14s; --mid:.22s;
+}
+
+/* ── 2. Themes ──────────────────────────────────────────────── */
+:root,
+:root[data-theme="dark"]{
+  --bg:#0b0e14; --surface:#141924; --surface-2:#1b2231; --line:#232a38;
+  --text:#e8ecf4; --text-2:#9aa6bd; --muted:#6b7689;
+  --accent:#4c8dff; --accent-weich:#1d2b47;
+  --up:#3ddc97; --down:#ff6b6b; --warn:#ffb454;
+  --spur:#232a38;
+  /* Text auf gefüllten Flächen. Eigene Tokens, weil "weiß auf Akzent" nur
+     so lange stimmt, wie der Akzent dunkel genug ist — ein Theme mit
+     hellem Akzent muss das hier umstellen können. */
+  --auf-akzent:#ffffff; --auf-warn:#1a1200;
+  --scrim:#000000b3;
+}
+
+/* FALLE: :root matcht <html> unabhängig von data-theme. Werte, die NUR für
+   dark gelten, gehören deshalb hierher — nicht in den Block oben, sonst
+   lecken sie in alle anderen Themes. */
+:root:not([data-theme]),
+:root[data-theme="dark"]{
+  --tab-bottom:14px; --tab-side:12px; --tab-radius:var(--r-xl); --tab-safe:0px;
+}
+
+:root[data-theme="light"]{
+  --bg:#f3f5f9; --surface:#ffffff; --surface-2:#eef1f7; --line:#dfe4ee;
+  --text:#121722; --text-2:#5a6577; --muted:#8a94a6;
+  --accent:#1f6feb; --accent-weich:#e3ecfd;
+  --up:#12a06a; --down:#d63d3d; --warn:#b26a00;
+  --spur:#e4e8f0;
+  --auf-akzent:#ffffff; --auf-warn:#fff6e6;
+  --scrim:#1217224d;
+}
+
+/* ── 3. Basis ───────────────────────────────────────────────── */
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--text);
+  font:15px/1.45 var(--font-ui);
+  padding-bottom:calc(var(--tab-h) + var(--tab-safe) + var(--tab-bottom) + 10px);
+  overscroll-behavior-y:none;
+  -webkit-font-smoothing:antialiased;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.hidden{display:none !important}
+.muted{color:var(--muted);font-weight:400}
+.klein{font-size:13px}
+
+/* Zahlen immer mit fester Ziffernbreite, sonst zappeln sie beim Aktualisieren. */
+.num,.hero-value,.stat-v{font-family:var(--font-num); font-variant-numeric:tabular-nums}
+.up{color:var(--up)} .down{color:var(--down)}
+
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button:focus:not(:focus-visible){outline:none}
+
+.topbar{
+  padding:calc(env(safe-area-inset-top) + 14px) var(--pad) 12px;
+  display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3);
+}
+.topbar h1{font:600 22px/1.2 var(--font-display); margin:0; letter-spacing:-.01em}
+.icon-btn{
+  width:44px;height:44px;border:0;border-radius:var(--r-pill);
+  background:var(--surface);color:var(--text-2);
+  display:grid;place-items:center;flex:0 0 auto;
+}
+.icon-btn svg{width:21px;height:21px}
+
+.view{padding:0 var(--pad) var(--sp-6)}
+
+/* ── Karten ─────────────────────────────────────────────────── */
+.card{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:var(--sp-4);margin-bottom:var(--sp-3);
+}
+.card-titel{
+  font:600 13px/1 var(--font-ui);color:var(--muted);
+  text-transform:uppercase;letter-spacing:.06em;margin:0 0 var(--sp-3);
+}
+
+.hero{text-align:center;padding:var(--sp-5) var(--sp-4)}
+.hero-value{font:700 44px/1 var(--font-display);letter-spacing:-.02em}
+.hero-sub{color:var(--text-2);margin-top:var(--sp-2)}
+
+.stat-reihe{display:flex;gap:var(--sp-3)}
+.stat{flex:1;min-width:0}
+.stat-k{font-size:12px;color:var(--muted);margin-bottom:2px}
+.stat-v{font:600 19px/1.2 var(--font-display)}
+
+/* ── Segmentierte Umschalter (Halbjahr-Tabs, Ziel-Modus) ────── */
+.seg{
+  display:flex;gap:var(--sp-1);background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r-pill);padding:4px;margin-bottom:var(--sp-4);
+}
+.seg button{
+  flex:1;min-height:44px;border:0;border-radius:var(--r-pill);
+  background:transparent;color:var(--text-2);font-weight:600;
+  transition:background var(--fast) var(--ease),color var(--fast) var(--ease);
+  position:relative;
+}
+.seg button.on{background:var(--accent);color:var(--auf-akzent)}
+/* Punkt am laufenden Halbjahr — ohne ihn weiß man nach Wochen nicht mehr,
+   wo man gerade steht. */
+.seg button.jetzt::after{
+  content:"";position:absolute;top:6px;right:9px;width:5px;height:5px;
+  border-radius:var(--r-pill);background:var(--warn);
+}
+.seg button.on.jetzt::after{background:var(--auf-akzent)}
+
+/* ── Fachzeilen ─────────────────────────────────────────────── */
+.zeile{
+  display:flex;align-items:center;gap:var(--sp-3);
+  padding:var(--sp-3) 0;border-top:1px solid var(--line);
+}
+.zeile:first-of-type{border-top:0}
+.zeile-name{
+  flex:1;min-width:0;background:none;border:0;padding:0;text-align:left;
+  display:flex;flex-direction:column;gap:2px;min-height:44px;justify-content:center;
+}
+.zeile-name strong{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zeile-meta{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:var(--sp-2)}
+
+.badge{
+  font:700 10px/1 var(--font-ui);letter-spacing:.06em;padding:4px 6px;
+  border-radius:var(--r-xs);background:var(--surface-2);color:var(--text-2);
+}
+.badge.lk{background:var(--accent-weich);color:var(--accent)}
+
+/* Punkteingabe: fest 56px breit, damit die Zeilen nicht springen */
+.punkt-in{
+  width:56px;flex:0 0 auto;height:44px;text-align:center;
+  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);
+  font:600 17px/1 var(--font-num);font-variant-numeric:tabular-nums;
+  -moz-appearance:textfield;
+}
+.punkt-in::-webkit-outer-spin-button,
+.punkt-in::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.punkt-in::placeholder{color:var(--muted);font-weight:400}
+.punkt-in.unter{border-color:var(--down);color:var(--down)}
+/* Das Erwartungsfeld steht neben dem echten Ergebnis und muss sich davon
+   abheben — sonst liest man einen Wunsch als Tatsache. */
+.punkt-in.schwach{background:transparent;border-style:dashed;color:var(--text-2);font-weight:400}
+
+/* Einbringen-Haken als eigener, großer Tap-Bereich */
+.haken{
+  width:44px;height:44px;flex:0 0 auto;border:0;background:none;
+  display:grid;place-items:center;border-radius:var(--r-sm);
+}
+.haken span{
+  width:24px;height:24px;border-radius:var(--r-xs);
+  border:2px solid var(--line);display:grid;place-items:center;
+  transition:background var(--fast) var(--ease),border-color var(--fast) var(--ease);
+}
+.haken[aria-pressed="true"] span{background:var(--accent);border-color:var(--accent)}
+.haken svg{width:15px;height:15px;color:var(--auf-akzent);opacity:0}
+.haken[aria-pressed="true"] svg{opacity:1}
+
+/* ── Befunde mit Ampel ──────────────────────────────────────── */
+.befund{
+  display:flex;gap:var(--sp-3);padding:var(--sp-3) 0;
+  border-top:1px solid var(--line);font-size:14px;line-height:1.4;
+}
+.befund:first-of-type{border-top:0}
+.befund i{
+  flex:0 0 auto;width:8px;height:8px;border-radius:var(--r-pill);margin-top:6px;
+}
+.befund-fehler i{background:var(--down)}
+.befund-warnung i{background:var(--warn)}
+.befund-offen i{background:var(--muted)}
+.befund-ok i{background:var(--up)}
+.befund-ok{color:var(--text-2)}
+
+/* ── Balken (Block I / Block II) ────────────────────────────── */
+.balken{display:block;width:100%;height:auto;overflow:visible}
+.bk-l{fill:var(--text-2);font:600 11px var(--font-ui)}
+.bk-v{fill:var(--text);font:700 11px var(--font-num);font-variant-numeric:tabular-nums}
+.bk-m{fill:var(--muted);font:9px var(--font-ui)}
+.bk-spur{fill:var(--spur)}
+/* Blass = Prognose, kräftig = gesichert. Der Unterschied muss auf einen
+   Blick lesbar sein, sonst verwechselt man Wunsch mit Stand. */
+.bk-prog{fill:var(--accent);opacity:.32}
+.bk-ist{fill:var(--accent)}
+.bk-min{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:2 3}
+
+/* ── Vergleichstabelle (Szenarien) ──────────────────────────── */
+/* Breite Inhalte scrollen in ihrem eigenen Kasten, nie die Seite. */
+.tabelle-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.vgl{width:100%;border-collapse:collapse;font-size:14px}
+.vgl th,.vgl td{padding:var(--sp-2) var(--sp-1);border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.vgl th{font:600 11px var(--font-ui);color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.vgl .num{text-align:right;font-variant-numeric:tabular-nums}
+.vgl tr:last-child td{border-bottom:0}
+.vgl .link{padding:var(--sp-1) var(--sp-2);min-height:0}
+
+/* ── Knöpfe ─────────────────────────────────────────────────── */
+.btn{
+  min-height:46px;padding:0 var(--sp-4);border-radius:var(--r);
+  border:1px solid var(--line);background:var(--surface-2);color:var(--text);
+  font-weight:600;
+}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--auf-akzent)}
+.btn-danger{background:var(--down);border-color:var(--down);color:var(--auf-akzent)}
+.btn-block{display:block;width:100%}
+.btn-reihe{display:flex;gap:var(--sp-2);margin-top:var(--sp-3)}
+.btn-reihe .btn{flex:1}
+.link{background:none;border:0;color:var(--accent);padding:var(--sp-2);font-weight:500;min-height:44px}
+.link.strong{font-weight:700}
+.leer{color:var(--muted);text-align:center;padding:var(--sp-6) var(--sp-4)}
+
+/* ── Tabbar ─────────────────────────────────────────────────── */
+.tabbar{
+  position:fixed;z-index:30;
+  left:var(--tab-side);right:var(--tab-side);
+  bottom:var(--tab-bottom);
+  height:calc(var(--tab-h) + var(--tab-safe));
+  padding-bottom:var(--tab-safe);
+  display:flex;align-items:stretch;
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--tab-radius);
+}
+.tabbar button{
+  flex:1;border:0;background:none;color:var(--muted);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  font-size:11px;font-weight:600;border-radius:var(--tab-radius);
+}
+.tabbar button svg{width:22px;height:22px}
+.tabbar button.on{color:var(--accent)}
+
+/* ── Sheet ──────────────────────────────────────────────────── */
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:40;backdrop-filter:blur(2px)}
+.sheet{
+  position:fixed;z-index:50;left:0;right:0;bottom:0;
+  max-height:88vh;display:flex;flex-direction:column;
+  background:var(--surface);border-top:1px solid var(--line);
+  border-radius:var(--r-xl) var(--r-xl) 0 0;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  animation:hoch var(--mid) var(--ease);
+}
+@keyframes hoch{from{transform:translateY(100%)}to{transform:none}}
+.sheet-grip{
+  width:38px;height:4px;border-radius:var(--r-pill);background:var(--line);
+  margin:var(--sp-2) auto 0;flex:0 0 auto;
+}
+.sheet-head{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);
+  padding:var(--sp-2) var(--sp-2) var(--sp-2);border-bottom:1px solid var(--line);
+}
+.sheet-head strong{font-size:15px;text-align:center;flex:1;min-width:0}
+.sheet-head .link{flex:0 0 auto;min-width:76px}
+.sheet-head .link:first-child{text-align:left}
+.sheet-head .link:last-child{text-align:right}
+.sheet-body{padding:var(--sp-4);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.sheet-body label{display:block;margin-bottom:var(--sp-4);font-size:13px;color:var(--text-2)}
+.sheet-body input,.sheet-body select{
+  display:block;width:100%;margin-top:var(--sp-2);min-height:46px;padding:0 var(--sp-3);
+  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);
+  color:var(--text);
+}
+.dlg-t{margin:0 0 var(--sp-4);line-height:1.5}
+
+/* Ein natives Kästchen ist rund 13 px groß und damit auf dem Handy nicht
+   zuverlässig zu treffen. Die ganze Zeile ist deshalb das Ziel. */
+.check-zeile{display:flex;align-items:center;gap:var(--sp-3);min-height:44px;color:var(--text)}
+.check-zeile input{
+  width:22px;height:22px;min-height:0;margin:0;padding:0;flex:0 0 auto;
+  accent-color:var(--accent);
+}
+
+/* ── Toast ──────────────────────────────────────────────────── */
+.toast{
+  position:fixed;z-index:60;left:50%;transform:translateX(-50%);
+  bottom:calc(var(--tab-h) + var(--tab-safe) + var(--tab-bottom) + 16px);
+  background:var(--text);color:var(--bg);
+  padding:var(--sp-3) var(--sp-4);border-radius:var(--r-pill);
+  font-size:14px;font-weight:600;max-width:calc(100vw - 32px);
+}
+
+/* ── Testdaten-Banner ───────────────────────────────────────── */
+.testbanner{
+  margin:0 var(--pad) var(--sp-3);padding:var(--sp-3);
+  background:var(--warn);color:var(--auf-warn);border-radius:var(--r);
+  font-size:13px;font-weight:600;
+  display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);
+}
+.testbanner .link{color:var(--auf-warn);text-decoration:underline}
+
+/* ── Breitere Bildschirme ───────────────────────────────────── */
+@media(min-width:560px){
+  main,.topbar,.testbanner{max-width:560px;margin-left:auto;margin-right:auto}
+  .tabbar{max-width:560px;margin:0 auto}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;
+    animation-iteration-count:1 !important; transition-duration:.01ms !important}
+}
