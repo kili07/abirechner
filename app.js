@@ -9,7 +9,7 @@
 
 const KEY = 'abirechner.v1';
 const THEME_KEY = 'abirechner.theme';
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.0.1';
 
 /* ═══════════════════════════════════════════════════════════════
    REGELN — die einzige Stelle, an der Zahlen aus der Verordnung stehen
@@ -1989,7 +1989,15 @@ function openSettings() {
     /* Kurz warten: der neue Worker muss erst installiert sein, bevor die
        frische app.js im Cache liegt und die Version gelesen werden kann. */
     setTimeout(async () => {
-      if (!(await applyIfNewer(true))) toast(`Du hast die neueste Fassung (${APP_VERSION})`);
+      const cv = await cachedVersion();
+      if (!cv || cv === APP_VERSION) { toast(`Du hast die neueste Fassung (${APP_VERSION})`); return; }
+      /* applyIfNewer() lädt nicht neu, solange ein Sheet offen ist — sonst
+         risse ein Update ein halb ausgefülltes Formular weg. Hier ist das
+         offene Sheet aber genau das, aus dem heraus Du das Update angefordert
+         hast. Ohne dieses Schließen könnte der Knopf sich nie selbst einlösen
+         und bliebe bei "bereit — App neu starten" stehen. */
+      closeSheet();
+      applyIfNewer(true);
     }, 1200);
   };
   $('#e_theme').onchange = (ev) => { applyTheme(ev.target.value); save(); };

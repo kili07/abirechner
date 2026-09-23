@@ -31,9 +31,8 @@ ich noch nachlegen, solange Q3, Q4 und die Prüfungen offen sind.
 - **Backup** als JSON-Datei, exportieren und wieder einlesen.
 - **Testdatensatz** in den Einstellungen — ein vollständiger Beispieljahrgang
   zum Ausprobieren, deutlich als Testdaten gekennzeichnet.
-
-Noch nicht gebaut: Service Worker, Manifest und Icons — die App ist also noch
-nicht installierbar und nicht offline-fähig.
+- **Installierbar und offline** — Service Worker, Manifest und Icons sind da.
+  Einmal geladen läuft die App ohne Netz weiter.
 
 ## Die Rechenregeln
 
@@ -84,6 +83,7 @@ Dann `http://localhost:8123` aufrufen.
 2. „uploading an existing file" → den **Inhalt** dieses Ordners hineinziehen,
    nicht den Ordner selbst. `index.html` muss im Wurzelverzeichnis liegen.
    `.claude/` und `HANDY-WEBAPP-BAUANLEITUNG.md` bleiben draußen.
+   `icons/make-icons.py` gehört dagegen dazu.
 3. *Settings → Pages → Deploy from a branch, `main`, `/ (root)`* → Save.
 4. Nach ein bis zwei Minuten liegt sie unter
    `https://<dein-name>.github.io/abirechner/`.
@@ -110,10 +110,19 @@ Schlägt eine Probe fehl, liegt der Fehler im Rechenkern — nicht in der Anzeig
 ## Aufbau
 
 ```
-index.html   Gerüst, alle Ansichten als <section>
-style.css    Tokens → Themes → Komponenten
-app.js       REGELN · Datenmodell · Rechenkern · Ansichten
+index.html            Gerüst, alle Ansichten als <section>
+style.css             Tokens → Themes → Komponenten
+app.js                REGELN · Datenmodell · Rechenkern · Ansichten
+sw.js                 Offline-Cache
+manifest.webmanifest  macht sie installierbar
+icons/make-icons.py   erzeugt die drei Icons neu
 ```
+
+Die Icons werden nicht von Hand gezeichnet, sondern mit
+`python3 icons/make-icons.py` erzeugt. Farbe und Größe stehen als Konstanten
+am Kopf des Skripts: Hintergrund `#1B1B1B`, weißes Motiv, im voll sichtbaren
+Icon 45 % der Kantenlänge breit, im maskable-Icon 32 % — dort schneidet
+Android auf einen Kreis mit 40 % Radius zu.
 
 Vanilla JavaScript, kein Build, keine Abhängigkeiten, keine Netzwerkaufrufe.
 Die Daten liegen im `localStorage` unter `abirechner.v1`.
