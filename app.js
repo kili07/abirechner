@@ -9,7 +9,7 @@
 
 const KEY = 'abirechner.v1';
 const THEME_KEY = 'abirechner.theme';
-const APP_VERSION = '1.0.1';
+const APP_VERSION = '1.0.2';
 
 /* ═══════════════════════════════════════════════════════════════
    REGELN — die einzige Stelle, an der Zahlen aus der Verordnung stehen
@@ -18,8 +18,16 @@ const APP_VERSION = '1.0.1';
    Fassung gültig ab 01.08.2025, insbesondere § 26 (Berechnung der
    Gesamtqualifikation), § 38 Abs. 1 und Anlage 10b.
    Gegengeprüft am Ratgeber des Deutschen Lehrerverbands Hessen zur OAVO,
-   Fassung April 2026 — Wortlaut in § 26 identisch, also für das
-   Landesabitur 2027 unverändert.
+   Fassung April 2026 (zuletzt geändert durch das Erste
+   Bürokratieabbaugesetz vom 16.12.2025) — Wortlaut in § 26 identisch.
+   Am 04.11.2026 gegen Bürgerservice Hessenrecht, Fassung gültig ab
+   01.08.2026, geprüft: § 13, § 17, § 23, § 24, § 26, § 52 und Anlage 10b
+   unverändert seit 04.06.2025 bzw. früher; die Änderung vom 22.06.2026
+   betrifft nur § 9. Anlage 10b für alle 601 Punktzahlen nachgerechnet.
+
+   § 26 Abs. 7 Satz 2 (ein Fach mit GK- und LK-Kursen nur einmal
+   einbringen) prüft die App nicht; ein Fach legt man hier ohnehin nur
+   einmal an.
 
    § 52 (Übergangsregelungen) nennt das Landesabitur 2027 ausdrücklich,
    betrifft aber nur den Prüfungsstoff (§ 25 Abs. 1), nicht die Berechnung.
@@ -150,6 +158,14 @@ const REGELN = {
        bis Q4 im 3., 4. und 5. Prüfungsfach. */
     lkAlleHalbjahre: 4,
     gkPruefungsfachAlleHalbjahre: 4,
+
+    /* § 26 Abs. 4 Nr. 1 verlangt alle vier Kurse jedes Prüfungsfachs,
+       Abs. 5 Nr. 1 erlaubt aus Sport "bis zu drei Kurse". Die Verordnung
+       löst den Widerspruch nicht selbst auf. Hier gilt: Ist Sport viertes
+       oder fünftes Prüfungsfach, geht Abs. 4 vor und alle vier Kurse sind
+       einzubringen; die Obergrenze 3 gilt nur für Sport ohne Prüfung.
+       PRÜFEN: mit Tutor oder Studienleitung bestätigen. */
+    sportPruefungsfachAlleHalbjahre: true,
 
     /* § 26 Abs. 6 — Verteilung der eingebrachten Kurse auf die
        Aufgabenfelder. 'min' ist die Zahl der Halbjahre.
@@ -663,6 +679,39 @@ function pruefeEinbringung(faecher, regeln) {
       `${b1.eingebrachtGK} von ${r.gkKurse} Grundkursen eingebracht.`);
   }
 
+  /* ── Prüfungsfächer vollständig eingebracht (§ 26 Abs. 4 Nr. 1) ─
+     Jedes Prüfungsfach mit allen vier Halbjahren, die Positionen 1 und 2
+     zusätzlich als Leistungskurs. Die Gesamtzahl 8 LK-Halbjahre allein
+     reicht nicht: sie wäre auch mit 4 + 3 + 1 aus drei Fächern erfüllt. */
+  liste.filter((f) => f.pruefungsfach).forEach((f) => {
+    const pos = f.pruefungsfach;
+    const lkPos = regeln.block2.lkPositionen.indexOf(pos) !== -1;
+    const soll = lkPos ? e.lkAlleHalbjahre : e.gkPruefungsfachAlleHalbjahre;
+    const drin = hjJeFach.get(f.id) || [];
+    const fehlende = regeln.halbjahre.filter((q) => drin.indexOf(q) === -1);
+    if (drin.length >= soll) {
+      add('ok', `${benannt(f)} (${pos}. Prüfungsfach): alle ${soll} Halbjahre eingebracht.`);
+    } else {
+      add('warnung', `${benannt(f)} ist ${pos}. Prüfungsfach: ${listeHalbjahre(fehlende)} `
+        + `${fehlende.length === 1 ? 'muss' : 'müssen'} eingebracht werden (§ 26 Abs. 4).`);
+    }
+    if (lkPos) {
+      const keinLK = regeln.halbjahre.filter((q) => f.hj[q] && f.hj[q].belegt && f.hj[q].kursart !== 'LK');
+      if (keinLK.length > 0) {
+        add('fehler', `${benannt(f)} ist ${pos}. Prüfungsfach und damit Leistungskurs, `
+          + `${listeHalbjahre(keinLK)} ${keinLK.length === 1 ? 'steht' : 'stehen'} aber als Grundkurs.`);
+      }
+    }
+  });
+  /* Leistungskurs-Halbjahre außerhalb der Positionen 1 und 2 */
+  kurse.filter((k) => k.lk).forEach((k) => {
+    const f = liste.filter((x) => x.id === k.fachId)[0];
+    if (f && regeln.block2.lkPositionen.indexOf(f.pruefungsfach) === -1 && f.pruefungsfach) {
+      add('fehler', `${benannt(f)} ${k.hj.toUpperCase()} ist als Leistungskurs eingebracht, `
+        + `das Fach ist aber ${f.pruefungsfach}. Prüfungsfach.`);
+    }
+  });
+
   /* ── Pflichteinbringung je Fach (§ 26 Abs. 6) ───────────────── */
   e.pflicht.forEach((p) => {
     const kandidaten = mitRolle(p.rolle);
@@ -755,8 +804,11 @@ function pruefeEinbringung(faecher, regeln) {
 
   /* ── Sport (§ 26 Abs. 5 Nr. 1) ──────────────────────────────── */
   const sport = kurse.filter((k) => k.rolle === 'sport').length;
-  if (sport > e.maxSport) {
-    add('fehler', `${sport} Sportkurse eingebracht, erlaubt sind ${e.maxSport}.`);
+  const sportIstPruefungsfach = liste.some((f) => f.rolle === 'sport' && f.pruefungsfach);
+  const sportMax = (sportIstPruefungsfach && e.sportPruefungsfachAlleHalbjahre)
+    ? regeln.halbjahre.length : e.maxSport;
+  if (sport > sportMax) {
+    add('fehler', `${sport} Sportkurse eingebracht, erlaubt sind ${sportMax}.`);
   }
 
   /* ── Was noch offen ist ─────────────────────────────────────── */
