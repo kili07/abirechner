@@ -11,18 +11,26 @@
    ═══════════════════════════════════════════════════════════════ */
 
 /* ── 1. Tokens ──────────────────────────────────────────────── */
+/* Richtung: Punkteskala. Ein kräftig blauer Kopf mit der Note in großer
+   schmaler Schrift, darunter die Notenstufen als Skala mit Strich für die
+   Prognose. Sofia Sans für Text, Sofia Sans Condensed für Zahlen, eckige
+   Formen mit Rahmen. Schriften liegen in fonts/, nachgeladen wird nichts. */
+@font-face{font-family:"Sofia Sans";font-style:normal;font-weight:1 1000;font-display:swap;
+  src:url(fonts/sofia-sans-latin-wght-normal.woff2) format("woff2")}
+@font-face{font-family:"Sofia Sans Condensed";font-style:normal;font-weight:1 1000;font-display:swap;
+  src:url(fonts/sofia-sans-condensed-latin-wght-normal.woff2) format("woff2")}
 :root{
-  --pad:16px;
+  --pad:20px;
   --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:24px;
 
-  --r-xs:6px; --r-sm:10px; --r:14px; --r-lg:18px; --r-xl:22px; --r-pill:999px;
+  --r-xs:2px; --r-sm:2px; --r:2px; --r-lg:2px; --r-xl:0px; --r-pill:999px;
+  --bw:2px;
 
-  /* Nur Systemschriften: es wird nichts nachgeladen, die App bleibt offline-fähig */
-  --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",system-ui,sans-serif;
-  --font-display:var(--font-ui);
-  --font-num:var(--font-ui);
+  --font-ui:"Sofia Sans",system-ui,sans-serif;
+  --font-display:"Sofia Sans Condensed","Sofia Sans",system-ui,sans-serif;
+  --font-num:"Sofia Sans Condensed","Sofia Sans",system-ui,sans-serif;
 
-  --tab-h:66px;
+  --tab-h:68px;
   --tab-bottom:0px;
   --tab-safe:env(safe-area-inset-bottom, 0px);
   --tab-side:0px;
@@ -33,36 +41,32 @@
 }
 
 /* ── 2. Themes ──────────────────────────────────────────────── */
+/* Dunkel: Tafel bei Nacht, der Kopf bleibt im selben Blau */
 :root,
 :root[data-theme="dark"]{
-  --bg:#0b0e14; --surface:#141924; --surface-2:#1b2231; --line:#232a38;
-  --text:#e8ecf4; --text-2:#9aa6bd; --muted:#6b7689;
-  --accent:#4c8dff; --accent-weich:#1d2b47;
-  --up:#3ddc97; --down:#ff6b6b; --warn:#ffb454;
-  --spur:#232a38;
-  /* Text auf gefüllten Flächen. Eigene Tokens, weil "weiß auf Akzent" nur
-     so lange stimmt, wie der Akzent dunkel genug ist — ein Theme mit
-     hellem Akzent muss das hier umstellen können. */
-  --auf-akzent:#ffffff; --auf-warn:#1a1200;
+  --bg:#0E1324; --surface:#161C33; --surface-2:#1E2642; --line:#323C60;
+  --ink:#DCE2F2;                        /* Rahmen der Skala und der Leiste */
+  --text:#EAEEF8; --text-2:#B3BBD3; --muted:#98A1BC;
+  --accent:#8DA2FF; --accent-weich:#25305A;
+  --kopf:#1F3FBF; --auf-kopf:#FFFFFF; --kopf-2:#D6DDFA;
+  --spanne:#3A4C9A;                     /* blasse Prognose in Balken und Skala */
+  --up:#5FD9A0; --down:#FF8A80; --warn:#F4BE5E;
+  --spur:#28304E;
+  --auf-akzent:#0E1324; --auf-warn:#1A1200;
   --scrim:#000000b3;
 }
 
-/* FALLE: :root matcht <html> unabhängig von data-theme. Werte, die NUR für
-   dark gelten, gehören deshalb hierher — nicht in den Block oben, sonst
-   lecken sie in alle anderen Themes. */
-:root:not([data-theme]),
-:root[data-theme="dark"]{
-  --tab-bottom:14px; --tab-side:12px; --tab-radius:var(--r-xl); --tab-safe:0px;
-}
-
 :root[data-theme="light"]{
-  --bg:#f3f5f9; --surface:#ffffff; --surface-2:#eef1f7; --line:#dfe4ee;
-  --text:#121722; --text-2:#5a6577; --muted:#8a94a6;
-  --accent:#1f6feb; --accent-weich:#e3ecfd;
-  --up:#12a06a; --down:#d63d3d; --warn:#b26a00;
-  --spur:#e4e8f0;
-  --auf-akzent:#ffffff; --auf-warn:#fff6e6;
-  --scrim:#1217224d;
+  --bg:#F4F6FA; --surface:#FFFFFF; --surface-2:#E8ECF4; --line:#BFC6D6;
+  --ink:#131A2E;
+  --text:#131A2E; --text-2:#414A63; --muted:#4E5772;
+  --accent:#1F3FBF; --accent-weich:#DDE3F8;
+  --kopf:#1F3FBF; --auf-kopf:#FFFFFF; --kopf-2:#D6DDFA;
+  --spanne:#B9C6F2;
+  --up:#13784C; --down:#B3261E; --warn:#8A5A00;
+  --spur:#E1E6EF;
+  --auf-akzent:#FFFFFF; --auf-warn:#FFF6E6;
+  --scrim:#131A2E59;
 }
 
 /* ── 3. Basis ───────────────────────────────────────────────── */
@@ -92,10 +96,10 @@ button:focus:not(:focus-visible){outline:none}
   padding:calc(env(safe-area-inset-top) + 14px) var(--pad) 12px;
   display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3);
 }
-.topbar h1{font:600 22px/1.2 var(--font-display); margin:0; letter-spacing:-.01em}
+.topbar h1{font:800 26px/1.1 var(--font-display); margin:0}
 .icon-btn{
-  width:44px;height:44px;border:0;border-radius:var(--r-pill);
-  background:var(--surface);color:var(--text-2);
+  width:44px;height:44px;border:0;border-radius:0;
+  background:transparent;color:inherit;
   display:grid;place-items:center;flex:0 0 auto;
 }
 .icon-btn svg{width:21px;height:21px}
@@ -104,35 +108,66 @@ button:focus:not(:focus-visible){outline:none}
 
 /* ── Karten ─────────────────────────────────────────────────── */
 .card{
-  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
+  background:var(--surface);border:1px solid var(--line);border-radius:0;
   padding:var(--sp-4);margin-bottom:var(--sp-3);
 }
 .card-titel{
-  font:600 13px/1 var(--font-ui);color:var(--muted);
-  text-transform:uppercase;letter-spacing:.06em;margin:0 0 var(--sp-3);
+  font:600 16px/1.2 var(--font-ui);color:var(--text);margin:0 0 var(--sp-3);
 }
 
-.hero{text-align:center;padding:var(--sp-5) var(--sp-4)}
-.hero-value{font:700 44px/1 var(--font-display);letter-spacing:-.02em}
-.hero-sub{color:var(--text-2);margin-top:var(--sp-2)}
+/* Kopf der Übersicht: volle Breite in Blau, die Note groß und schmal */
+.hero{
+  margin:0 calc(-1 * var(--pad)) var(--sp-5); padding:var(--sp-4) var(--pad) var(--sp-5);
+  background:var(--kopf); color:var(--auf-kopf);
+}
+.hero-kopf{display:flex;justify-content:space-between;gap:var(--sp-3);font-size:16px}
+.hero-zeile{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--sp-3)}
+.hero-value{font:800 132px/.86 var(--font-display);letter-spacing:-2px;font-variant-numeric:tabular-nums}
+.hero-value.leer{font-size:44px;line-height:1;letter-spacing:0;padding-bottom:8px}
+.hero-rechts{text-align:right;padding-bottom:6px;font-size:16px}
+.hero-punkte{font:800 34px/1 var(--font-num)}
+.hero-sub{color:var(--kopf-2);margin:var(--sp-2) 0 0}
+.hero .btn-primary{background:var(--auf-kopf);border-color:var(--auf-kopf);color:var(--kopf)}
+
+/* Abschnitte ohne Karte: Überschrift, Inhalt, Luft */
+.block{margin:0 0 var(--sp-6)}
+.block-titel{margin:0 0 var(--sp-2);font:600 16px/1.3 var(--font-ui)}
+
+/* Notenskala: Stufen als Kästen mit Rahmen, Ziel gefüllt, Prognose als Strich */
+.skala{position:relative;padding-top:12px}
+.skala-strich{position:absolute;top:0;width:4px;height:56px;margin-left:-2px;background:var(--ink);z-index:1}
+.skala-stufen{display:grid;border:var(--bw) solid var(--ink)}
+.skala-stufen > div{height:44px;display:grid;place-items:center;font:800 24px/1 var(--font-num);font-variant-numeric:tabular-nums}
+.skala-stufen > div + div{border-left:var(--bw) solid var(--ink)}
+.skala-stufen > .jetzt{background:var(--surface)}
+.skala-stufen > .ziel{background:var(--accent);color:var(--auf-akzent)}
+.skala-punkte{display:grid;margin-top:4px;font-size:14px;color:var(--text-2)}
+
+/* Was schon feststeht: gesichert voll, Annahme schraffiert */
+.fest{display:flex;height:36px;border:var(--bw) solid var(--ink)}
+.fest-sicher{background:var(--ink)}
+.fest-annahme{background-image:repeating-linear-gradient(135deg, var(--ink) 0, var(--ink) 2px, transparent 2px, transparent 8px)}
+.fest-legende{display:flex;justify-content:space-between;gap:var(--sp-2);margin:6px 0 var(--sp-4);font-size:14px}
+.fest-legende b{font-weight:700}
 
 .stat-reihe{display:flex;gap:var(--sp-3)}
 .stat{flex:1;min-width:0}
-.stat-k{font-size:12px;color:var(--muted);margin-bottom:2px}
-.stat-v{font:600 19px/1.2 var(--font-display)}
+.stat-k{font-size:13px;color:var(--text-2);margin-bottom:2px;hyphens:auto;-webkit-hyphens:auto;overflow-wrap:break-word}
+.stat-v{font:800 28px/1.1 var(--font-num)}
 
 /* ── Segmentierte Umschalter (Halbjahr-Tabs, Ziel-Modus) ────── */
 .seg{
-  display:flex;gap:var(--sp-1);background:var(--surface);border:1px solid var(--line);
-  border-radius:var(--r-pill);padding:4px;margin-bottom:var(--sp-4);
+  display:flex;gap:0;background:var(--surface);border:var(--bw) solid var(--ink);
+  border-radius:0;padding:0;margin-bottom:var(--sp-4);
 }
 .seg button{
-  flex:1;min-height:44px;border:0;border-radius:var(--r-pill);
+  flex:1;min-height:44px;border:0;border-radius:0;
   background:transparent;color:var(--text-2);font-weight:600;
   transition:background var(--fast) var(--ease),color var(--fast) var(--ease);
   position:relative;
 }
 .seg button.on{background:var(--accent);color:var(--auf-akzent)}
+.seg button + button{border-left:var(--bw) solid var(--ink)}
 /* Punkt am laufenden Halbjahr — ohne ihn weiß man nach Wochen nicht mehr,
    wo man gerade steht. */
 .seg button.jetzt::after{
@@ -155,7 +190,7 @@ button:focus:not(:focus-visible){outline:none}
 .zeile-meta{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:var(--sp-2)}
 
 .badge{
-  font:700 10px/1 var(--font-ui);letter-spacing:.06em;padding:4px 6px;
+  font:700 12px/1 var(--font-ui);padding:4px 6px;
   border-radius:var(--r-xs);background:var(--surface-2);color:var(--text-2);
 }
 .badge.lk{background:var(--accent-weich);color:var(--accent)}
@@ -164,7 +199,7 @@ button:focus:not(:focus-visible){outline:none}
 .punkt-in{
   width:56px;flex:0 0 auto;height:44px;text-align:center;
   background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);
-  font:600 17px/1 var(--font-num);font-variant-numeric:tabular-nums;
+  font:800 20px/1 var(--font-num);font-variant-numeric:tabular-nums;
   -moz-appearance:textfield;
 }
 .punkt-in::-webkit-outer-spin-button,
@@ -221,15 +256,15 @@ button:focus:not(:focus-visible){outline:none}
 .tabelle-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .vgl{width:100%;border-collapse:collapse;font-size:14px}
 .vgl th,.vgl td{padding:var(--sp-2) var(--sp-1);border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
-.vgl th{font:600 11px var(--font-ui);color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.vgl th{font:600 13px var(--font-ui);color:var(--text-2)}
 .vgl .num{text-align:right;font-variant-numeric:tabular-nums}
 .vgl tr:last-child td{border-bottom:0}
 .vgl .link{padding:var(--sp-1) var(--sp-2);min-height:0}
 
 /* ── Knöpfe ─────────────────────────────────────────────────── */
 .btn{
-  min-height:46px;padding:0 var(--sp-4);border-radius:var(--r);
-  border:1px solid var(--line);background:var(--surface-2);color:var(--text);
+  min-height:46px;padding:0 var(--sp-4);border-radius:0;
+  border:var(--bw) solid var(--ink);background:transparent;color:var(--text);
   font-weight:600;
 }
 .btn-primary{background:var(--accent);border-color:var(--accent);color:var(--auf-akzent)}
@@ -249,24 +284,25 @@ button:focus:not(:focus-visible){outline:none}
   height:calc(var(--tab-h) + var(--tab-safe));
   padding-bottom:var(--tab-safe);
   display:flex;align-items:stretch;
-  background:var(--surface);border:1px solid var(--line);
-  border-radius:var(--tab-radius);
+  background:var(--surface);border:0;border-top:var(--bw) solid var(--ink);
+  border-radius:0;
 }
 .tabbar button{
   flex:1;border:0;background:none;color:var(--muted);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-  font-size:11px;font-weight:600;border-radius:var(--tab-radius);
+  font-size:14px;font-weight:600;border-radius:0;color:var(--text);
+  border-bottom:3px solid transparent;
 }
 .tabbar button svg{width:22px;height:22px}
-.tabbar button.on{color:var(--accent)}
+.tabbar button.on{color:var(--accent);border-bottom-color:var(--accent)}
 
 /* ── Sheet ──────────────────────────────────────────────────── */
-.scrim{position:fixed;inset:0;background:var(--scrim);z-index:40;backdrop-filter:blur(2px)}
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:40}
 .sheet{
   position:fixed;z-index:50;left:0;right:0;bottom:0;
   max-height:88vh;display:flex;flex-direction:column;
-  background:var(--surface);border-top:1px solid var(--line);
-  border-radius:var(--r-xl) var(--r-xl) 0 0;
+  background:var(--surface);border-top:var(--bw) solid var(--ink);
+  border-radius:0;
   padding-bottom:env(safe-area-inset-bottom,0px);
   animation:hoch var(--mid) var(--ease);
 }
@@ -305,7 +341,7 @@ button:focus:not(:focus-visible){outline:none}
   position:fixed;z-index:60;left:50%;transform:translateX(-50%);
   bottom:calc(var(--tab-h) + var(--tab-safe) + var(--tab-bottom) + 16px);
   background:var(--text);color:var(--bg);
-  padding:var(--sp-3) var(--sp-4);border-radius:var(--r-pill);
+  padding:var(--sp-3) var(--sp-4);border-radius:0;
   font-size:14px;font-weight:600;max-width:calc(100vw - 32px);
 }
 

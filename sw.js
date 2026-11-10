@@ -1,8 +1,9 @@
 /* Service Worker — App offline verfügbar halten.
    Bei jeder Änderung an den Dateien CACHE hochzählen. */
-const CACHE = 'abirechner-v4';
+const CACHE = 'abirechner-v5';
 const ASSETS = [
   './', './index.html', './style.css', './app.js', './manifest.webmanifest',
+  './fonts/sofia-sans-latin-wght-normal.woff2', './fonts/sofia-sans-condensed-latin-wght-normal.woff2',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png',
 ];
 

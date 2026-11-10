@@ -9,7 +9,7 @@
 
 const KEY = 'abirechner.v1';
 const THEME_KEY = 'abirechner.theme';
-const APP_VERSION = '1.0.3';
+const APP_VERSION = '1.1.0';
 
 /* ═══════════════════════════════════════════════════════════════
    REGELN — die einzige Stelle, an der Zahlen aus der Verordnung stehen
@@ -353,7 +353,7 @@ const blank = () => ({
      sich nie als echter Stand ausgeben. */
   testdaten: false,
 
-  theme: 'dark',
+  theme: 'light',
   lastBackup: null,              // ISO-Zeitstempel des letzten Exports
 });
 
@@ -898,8 +898,8 @@ function testpruefungen(punkteFuer, regeln) {
    <meta name="theme-color">, damit die Systemleiste mitzieht — muss mit
    --bg in style.css übereinstimmen. */
 const THEMES = {
-  dark:  { label: 'Dunkel', bar: '#0b0e14' },
-  light: { label: 'Hell',   bar: '#f3f5f9' },
+  dark:  { label: 'Dunkel', bar: '#0E1324' },
+  light: { label: 'Hell',   bar: '#F4F6FA' },
 };
 
 /* ── Helfer ─────────────────────────────────────────────────── */
@@ -1511,11 +1511,52 @@ function balkenSvg(gesichert, prognose) {
     >${teile}</svg>`;
 }
 
+/** Notenskala der Übersicht: fünf Notenstufen um die Prognose, die
+    Ziel-Stufe gefüllt, die Prognose als Strich. Unter jeder Stufe die
+    kleinste Punktzahl, die sie ergibt. */
+function skalaHtml(punkte, note, zielNote) {
+  if (note === null) return '';
+  const g = REGELN.gesamt;
+  const stufen = [];
+  for (let d = 2; d >= -2; d--) {
+    const n = Math.round((note + d / 10) * 10) / 10;
+    if (n >= g.noteBeste && n <= g.noteSchlechteste) stufen.push(n);
+  }
+  const lo = punkteFuerNote(stufen[0], REGELN);
+  const best = stufen[stufen.length - 1];
+  const hi = Math.min(g.max, best <= g.noteBeste ? g.max : punkteFuerNote(Math.round((best - 0.1) * 10) / 10, REGELN));
+  const pos = Math.max(0, Math.min(100, ((punkte - lo) / Math.max(1, hi - lo)) * 100));
+  const naechste = Math.round((note - 0.1) * 10) / 10;
+  const bisNaechste = note > g.noteBeste ? punkteFuerNote(naechste, REGELN) - punkte : 0;
+  const titel = note > g.noteBeste
+    ? `Noch ${bisNaechste} ${bisNaechste === 1 ? 'Punkt' : 'Punkte'} bis ${zeigeNote(naechste)}`
+    : 'Beste Note erreicht';
+  return `<div class="block">
+    <h2 class="block-titel">${esc(titel)}</h2>
+    <div class="skala" role="img" aria-label="Notenstufen ${stufen.map(zeigeNote).join(', ')}, Prognose ${punkte} Punkte">
+      <div class="skala-strich" style="left:${pos.toFixed(1)}%"></div>
+      <div class="skala-stufen" style="grid-template-columns:repeat(${stufen.length}, minmax(0, 1fr))">${stufen.map((n) =>
+        `<div class="${n === note ? 'jetzt' : ''}${n === zielNote ? ' ziel' : ''}">${zeigeNote(n)}</div>`).join('')}</div>
+      <div class="skala-punkte" style="grid-template-columns:repeat(${stufen.length}, minmax(0, 1fr))">${stufen.map((n) =>
+        `<div class="num">${punkteFuerNote(n, REGELN)}</div>`).join('')}</div>
+    </div>
+    <p class="klein muted" style="margin:6px 0 0">Strich: Prognose ${punkte}.${zielNote !== null ? ` Gefüllt: Ziel ${zeigeNote(zielNote)}.` : ''}</p>
+  </div>`;
+}
+
+/** Ein Streifen über alle 900 Punkte: gesichert voll, Annahme schraffiert. */
+function feststehtHtml(sicher, prognose) {
+  const max = REGELN.gesamt.max;
+  const ann = Math.max(0, prognose - sicher);
+  return `<div class="fest" role="img" aria-label="${sicher} Punkte gesichert, ${ann} Punkte Annahme, ${max - sicher - ann} nicht erreicht">
+    <div class="fest-sicher" style="flex:${sicher}"></div><div class="fest-annahme" style="flex:${ann}"></div><div style="flex:${Math.max(0, max - sicher - ann)}"></div></div>`;
+}
+
 function renderHome() {
   const el = $('#view-home');
 
   if (!db.setup && !db.faecher.length) {
-    el.innerHTML = `<div class="card hero">
+    el.innerHTML = `<div class="hero">
       <div class="hero-value">Abi ${db.schule.abijahr}</div>
       <p class="hero-sub">Noch nichts eingerichtet.</p>
       <button class="btn btn-primary btn-block" data-aktion="setup" style="margin-top:16px"
@@ -1530,24 +1571,25 @@ function renderHome() {
   const offen = s.gesichert.b1.offen + s.gesichert.b2.offen;
   const mitPrognoseGerechnet = prog.punkte !== sich.punkte;
 
-  /* Unter 300 Punkten gibt es nach Anlage 10b keine Note. Solange Q1 bis
-     Q4 nicht stehen, ist das der Normalfall und keine schlechte Nachricht —
-     deshalb hier ein Satz statt eines Striches ohne Erklärung. */
-  const heroUnten = prog.note === null
-    ? `${prog.punkte} von ${REGELN.gesamt.max} Punkten — unter ${REGELN.gesamt.min} gibt es noch keine Note`
-    : `${prog.punkte} von ${REGELN.gesamt.max} Punkten`;
-
+  const zielNote = noteFuerPunkte(ziel, REGELN);
   el.innerHTML = `
-    <div class="card hero">
-      <div class="hero-value">${zeigeNote(prog.note)}</div>
-      <p class="hero-sub">${esc(heroUnten)}</p>
-      ${offen ? `<p class="hero-sub klein muted">${offen} Leistungen noch offen</p>` : ''}
+    <div class="hero">
+      <div class="hero-kopf"><span>Abi ${esc(String(db.schule.abijahr))}, Prognose</span><span>Ziel ${zeigeNote(zielNote)}</span></div>
+      <div class="hero-zeile">
+        ${prog.note === null ? '<div class="hero-value leer">keine Note</div>' : `<div class="hero-value">${zeigeNote(prog.note)}</div>`}
+        <div class="hero-rechts"><div class="hero-punkte num">${prog.punkte}</div><div>von ${REGELN.gesamt.max} Punkten</div></div>
+      </div>
+      ${prog.note === null ? `<p class="hero-sub">Unter ${REGELN.gesamt.min} Punkten gibt es noch keine Note.</p>` : ''}
+      ${offen ? `<p class="hero-sub">${offen} Leistungen noch offen</p>` : ''}
     </div>
 
-    <div class="card">
+    ${skalaHtml(prog.punkte, prog.note, zielNote)}
+
+    <div class="block">
+      <h2 class="block-titel">Was schon feststeht</h2>
+      ${feststehtHtml(sich.punkte, prog.punkte)}
+      <div class="fest-legende"><span><b class="num">${sich.punkte}</b> gesichert</span><span><b class="num">${prog.punkte - sich.punkte}</b> Annahme</span><span class="muted num">${REGELN.gesamt.max}</span></div>
       <div class="stat-reihe">
-        <div class="stat"><div class="stat-k">Gesichert</div><div class="stat-v num">${sich.punkte}</div></div>
-        <div class="stat"><div class="stat-k">Prognose</div><div class="stat-v num">${prog.punkte}</div></div>
         <div class="stat"><div class="stat-k">Ziel</div><div class="stat-v num">${ziel}</div></div>
         <div class="stat"><div class="stat-k">Differenz</div>
           <div class="stat-v num ${diff <= 0 ? 'up' : 'down'}">${diff <= 0 ? '+' + (-diff) : '−' + diff}</div></div>
@@ -1555,9 +1597,9 @@ function renderHome() {
       <p class="klein muted" style="margin:12px 0 0">
         Gesichert zählt nur eingetragene Ergebnisse.
         ${mitPrognoseGerechnet
-          ? 'Die Prognose rechnet Deine erwarteten Werte mit.'
+          ? 'Die Annahme sind Deine erwarteten Werte.'
           : 'Ohne erwartete Werte ist die Prognose gleich dem gesicherten Stand.'}
-        Ziel: ${zeigeNote(noteFuerPunkte(ziel, REGELN))} — änderbar in den Einstellungen.</p>
+        Ziel änderbar in den Einstellungen.</p>
     </div>
 
     <div class="card">
